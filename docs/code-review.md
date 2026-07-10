@@ -1,104 +1,138 @@
 # Code Review Guide
 
-Use this guide when reviewing changes.
+Use this guide when reviewing changes. Review findings before style
+suggestions, and do not edit files unless the review request explicitly asks
+for changes.
 
-## Review priorities
+## Review Priorities
 
 Review in this order:
 
-1. Correctness
-2. Runtime safety
-3. Simplicity
-4. Maintainability
-5. Testability
-6. Style
+1. Correctness and public-interface compatibility
+2. Runtime and hardware safety
+3. Validation and test evidence
+4. Simplicity and maintainability
+5. Readability and style
 
-Do not focus on formatting unless formatters cannot handle it.
+Do not focus on formatting that the configured tools can check automatically.
 
-## Review checklist
+## Required Review Checks
 
-### Correctness
+### Correctness and Compatibility
 
-- Does the code handle expected inputs?
-- Does it handle invalid inputs?
-- Are edge cases covered?
-- Are state transitions valid?
-- Could this fail on Jetson or a different ROS2 environment?
+- Does the code handle expected, invalid, and boundary inputs?
+- Are all state transitions valid, including repeated requests, cancellation,
+  failure, and recovery paths?
+- Does the change preserve topics, services, actions, parameters, TF frames,
+  CSV formats, and saved-pose formats, or update every downstream user?
+- Are configuration defaults, validation, and migration behavior clear?
+- Could the code behave differently on the Jetson or a different ROS 2 Humble
+  environment?
 
-### Readability
+### Runtime and Safety
 
-- Can the main flow be understood in one pass?
-- Are functions small and focused?
-- Are names domain-specific and clear?
-- Is there unnecessary nesting?
-- Is any lambda or wrapper hiding important behavior?
+- Does any path publish motion commands, change command ownership, or alter
+  stop behavior? If so, is the safe failure path explicit?
+- Are motor, serial, LiDAR, tracking, localization, and autonomous-replay
+  failures handled conservatively?
+- Are callbacks non-blocking and safe for the configured executor model?
+- Are shared state, timers, futures, subprocesses, and shutdown cleanup owned
+  and synchronized clearly?
+- Is QoS compatible with the publishers and subscribers that must interoperate?
+- Does the change follow the applicable rules in [`safety.md`](safety.md)?
 
-### Architecture
+### Validation and Tests
 
-- Is core logic separated from ROS I/O?
-- Are hardware/framework dependencies isolated?
-- Is the file responsible for too many things?
-- Would a new developer know where to make a related change?
+- Is there automated test coverage for changed pure logic, state transitions,
+  conversions, or error paths when practical?
+- Has the affected package been built and tested with
+  `colcon test --packages-select <package>` when the environment permits?
+- If tests cannot run, does the review record why and identify the remaining
+  risk?
+- For ROS interface or workflow changes, are the relevant topic, service,
+  action, launch, or integration checks identified?
+- For hardware-sensitive changes, is a no-hardware or dry-run check identified
+  before real-robot testing?
 
-### Python
+### Maintainability and Readability
 
-- Are type hints present where useful?
-- Are exceptions handled explicitly?
-- Are dataclasses/config objects used where they simplify parameters?
-- Are comprehensions simple enough to read?
+- Can the main control flow be understood in one pass?
+- Is each function responsible for one cohesive operation?
+- Is pure policy or conversion logic separated from ROS I/O where useful?
+- Are names domain-specific and clear, including units where relevant?
+- Is nesting necessary, or can guards and named helpers make outcomes clearer?
+- Does any wrapper, lambda, property, or abstraction hide side effects or add
+  indirection without a useful boundary?
+- Is the file and package still the right owner for this behavior?
 
-### C/C++
+### Language-Specific Checks
 
-- Is ownership clear?
-- Are references/pointers safe?
-- Are headers minimal?
-- Are templates/macros avoided unless necessary?
-- Are lambdas short and local?
+For Python:
 
-### ROS2
+- Are type hints present where they clarify a public or non-trivial interface?
+- Are exceptions handled explicitly with useful context?
+- Are dataclasses or configuration objects used when they clarify related
+  fields?
+- Does the change follow `flake8` configuration and
+  [`python-docstring-style.md`](python-docstring-style.md)?
 
-- Are topic/service/parameter names clear?
-- Are callbacks short?
-- Is high-frequency logging avoided?
-- Are launch/config changes documented?
-- Are parameters validated?
+For C and C++:
 
-## Output format for reviews
+- Is ownership and lifetime clear?
+- Are references, pointers, and callback captures safe?
+- Are headers minimal and implementation details kept private?
+- Are compiler warnings addressed rather than hidden?
 
-Use this format:
+## Finding Severity
+
+- **Critical:** Can cause unsafe robot motion, data loss, a crash, a deadlock,
+  or an unrecoverable workflow failure.
+- **Major:** Can produce incorrect behavior, break an interface, leave a
+  failure path unhandled, or make a likely future change unsafe or unreliable.
+- **Minor:** Does not change behavior now, but reduces clarity, consistency, or
+  testability.
+
+Do not invent a severity when there is no meaningful issue. State explicitly
+when no findings are identified and list any unverified risks or test gaps.
+
+## Review Output Format
 
 ```text
 Summary:
-- ...
+- Scope reviewed and verification performed.
 
 Critical:
-- [file:function] issue, risk, suggested fix
+- [path:line or symbol] issue, concrete risk, suggested fix
 
 Major:
-- [file:function] issue, risk, suggested fix
+- [path:line or symbol] issue, concrete risk, suggested fix
 
 Minor:
-- [file:function] issue, suggested fix
+- [path:line or symbol] issue, suggested fix
+
+Validation gaps:
+- Tests or runtime checks not run, reason, and remaining risk.
 
 Suggested next step:
-- ...
+- Highest-value follow-up action.
 ```
 
-## Codex review prompt
+Omit empty severity sections when there are findings only at other levels.
+
+## Codex Review Prompt
 
 ```text
 Review this code without editing files.
 
-Use docs/code-review.md.
-Focus on:
-- readability
-- function size
-- unnecessary wrappers
-- complex lambdas
-- nested control flow
-- file responsibility
-- ROS2 maintainability
+Use docs/code-review.md and docs/code-style.md.
+Review correctness, public ROS interface compatibility, runtime and hardware
+safety, validation, test gaps, maintainability, and readability in that order.
 
-Report issues as Critical / Major / Minor.
-Do not nitpick formatting handled by tools.
+For ROS 2 changes, check state transitions, QoS, callback blocking, executor or
+shared-state safety, shutdown cleanup, parameters, command ownership, and safe
+failure behavior when relevant.
+
+Report only actionable findings as Critical / Major / Minor with
+[path:line or symbol], risk, and suggested fix. Include a Validation gaps
+section. Do not edit files or nitpick formatting handled by configured tools.
 ```
