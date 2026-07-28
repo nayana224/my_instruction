@@ -29,6 +29,8 @@ enforced formatting baseline.
    ROS I/O when it can be tested independently.
 6. **Required:** Keep safety-sensitive behavior explicit: command ownership,
    stop behavior, state transitions, and failure recovery must not be hidden.
+7. **Required:** Prefer the solution with the fewest concepts, not necessarily
+   the fewest lines.
 
 ## Function Design
 
@@ -51,9 +53,29 @@ Split a function when one or more of these conditions apply:
 - A pure portion can be tested without ROS, hardware, or the filesystem.
 - Nested conditions make success, failure, or stop behavior unclear.
 
+Do not split a function only to satisfy a line-count guideline. A cohesive
+longer function is preferable to several tiny helpers that force the reader to
+jump between symbols. Do not extract a helper that merely renames one or two
+obvious statements.
+
 ROS callbacks should validate minimal input, delegate non-trivial work to named
 methods, and avoid blocking work. A callback may remain small even when the
 delegated workflow is necessarily complex.
+
+## Class Design
+
+Create a class when it owns meaningful state, invariants, resources, lifecycle,
+or a stable external-system boundary. Do not create a class only to group
+related functions.
+
+- Prefer module-level functions when no meaningful state or lifecycle exists.
+- Avoid static-method-only classes.
+- Avoid classes whose only operation is a vague `run`, `execute`, `process`, or
+  `handle` method unless a framework requires the interface.
+- Prefer composition over inheritance.
+- Do not introduce an abstract base class for one implementation or hypothetical
+  future variants.
+- Use inheritance only when substitution is real and the base contract is clear.
 
 ## Naming
 
@@ -69,10 +91,17 @@ Avoid vague names such as `process`, `handle`, `do_work`, or `manager` unless
 the scope makes the subject unambiguous. Generic loop variables are acceptable
 in very small scopes.
 
+Avoid generic structural names such as `Manager`, `Processor`, `Handler`,
+`Helper`, `Utils`, `Common`, `Factory`, `Base`, or `Context` when a
+more specific domain name is available.
+
 Use clear English names for packages, files, classes, functions, variables,
 topics, services, actions, parameters, and state transitions. Include units in
 variable names when a value could otherwise be misread, such as
 `timeout_seconds` or `max_speed_mps`.
+
+Do not create generic `utils.py`, `helpers.py`, or `common.py` modules when a
+domain-specific module name is available.
 
 ## Abstractions, Lambdas, and Wrappers
 
@@ -82,13 +111,66 @@ Use an abstraction only when it establishes a useful boundary:
 - It isolates ROS I/O from testable core logic.
 - It gives domain meaning to a repeated operation.
 - It makes a safety or state-transition contract easier to see.
+- It enforces an important invariant.
 
 Do not add a wrapper that only renames a single call, hides side effects, or
 adds another navigation step without simplifying the caller.
 
+Do not introduce factories, registries, plugin systems, strategy objects,
+dependency-injection containers, or extension hooks for hypothetical future
+reuse. A small amount of obvious duplication is preferable to a premature or
+incorrect abstraction.
+
 Avoid lambdas by default. A lambda is acceptable for a short, local,
 side-effect-free expression such as a sort key. Use a named function or method
 for callbacks and for any lambda that performs domain logic, mutation, or I/O.
+
+## Type Hints
+
+Type hints should reduce ambiguity at important interfaces. They are not a goal
+by themselves and should not be added mechanically to every variable or helper.
+
+Use type hints for:
+
+- public functions and methods,
+- ROS-independent domain boundaries,
+- shared structured data,
+- non-trivial return values,
+- and inputs whose units, optionality, or accepted forms are otherwise unclear.
+
+Do not require type hints for:
+
+- obvious local variables,
+- short private helpers whose types are clear from nearby code,
+- loop variables,
+- or intermediate expressions where an annotation adds no information.
+
+Keep signatures readable:
+
+- Prefer concrete built-in and standard-library types when sufficient.
+- Avoid deeply nested generics in public signatures.
+- Create a named type alias only when it expresses a stable domain concept or
+  substantially clarifies a repeated signature.
+- Do not introduce `Protocol`, `Generic`, `TypeVar`, overload sets, or custom
+  typing utilities for one implementation or speculative reuse.
+- Do not create wrapper dataclasses solely to make a type checker happy or to
+  reduce the visible parameter count.
+- Do not use `Any` merely to silence errors. Keep dynamic data at a clear
+  boundary and document why it is unavoidable.
+- Avoid unnecessary `cast`, `# type: ignore`, and typing-only adapters. When one
+  is necessary, explain the unsupported or dynamic boundary.
+- Type hints do not replace runtime validation of ROS messages, parameters,
+  files, hardware responses, or other untrusted data.
+
+## Validation Boundaries
+
+Validate untrusted data at clear boundaries such as ROS callbacks, parameter
+loading, files, network or serial input, public APIs, and hardware responses.
+After validation, internal helpers may rely on the documented invariant.
+
+Do not repeat the same defensive checks throughout every internal function.
+Do not add checks for impossible states without evidence that they can occur.
+Avoid broad exception handling where the code cannot recover meaningfully.
 
 ## Comments and Documentation
 
@@ -118,12 +200,16 @@ the function name.
 - Follow PEP 8 as interpreted by the package's configured `flake8` checks.
 - The current repository baseline uses a maximum line length of 100 where
   configured; do not reformat unrelated lines solely to meet a different tool.
-- Use type hints for public functions and non-trivial internal functions.
-- Prefer dataclasses for structured configuration or state when they make
+- Use type hints according to the Type Hints section above.
+- Prefer dataclasses for real structured configuration or state when they make
   ownership and fields clearer.
 - Prefer explicit control flow over dense comprehensions when logic is
   non-trivial.
 - Do not hide important side effects in properties, destructors, or imports.
+- Avoid metaprogramming, reflection, dynamic attribute access, multiple
+  inheritance, and decorators with hidden control flow unless clearly required.
+- Avoid `getattr`, `setattr`, `globals`, `locals`, `eval`, and `exec` for normal
+  application control flow.
 
 ## C and C++
 
@@ -133,6 +219,7 @@ the function name.
   files when practical.
 - Avoid complex templates and macros unless they provide a clear benefit that
   safer language features cannot provide.
+- Prefer concrete types and ordinary functions when only one concrete use exists.
 - Treat compiler warnings enabled by the package as issues to resolve, not
   suppress by default.
 
