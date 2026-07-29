@@ -1,237 +1,110 @@
 # AGENTS.md
 
-## Project coding policy
+## Purpose
 
-This repository prioritizes readability, reviewability, and small safe changes.
+Keep changes simple, reviewable, and safe. Follow this file for every task and
+open only the relevant guide in `docs/`.
 
-Codex must follow these rules for all code changes.
+## Priority
 
-## General rules
+When rules conflict, follow this order:
 
-- Prefer simple, explicit, boring code over clever or compact code.
-- Optimize for human reviewability, not for minimum line count.
-- Prefer the solution with the fewest concepts, not necessarily the fewest lines.
-- Keep changes small and localized.
-- Do not perform broad refactors unless explicitly requested.
-- Before editing, explain the plan and list the files likely to change.
-- After editing, summarize:
-  - What changed
-  - Why it changed
-  - How to test it
-  - Any behavior changes or risks
-
-## Rule precedence and scope
-
-When rules conflict, follow them in this order:
-
-1. Safety and correctness requirements
-2. Existing project-specific conventions and public interfaces
-3. This `AGENTS.md`
-4. Language- or format-specific guides in `docs/`
+1. Safety and correctness
+2. Existing project conventions and public interfaces
+3. This file
+4. Relevant guides in `docs/`
 5. Formatter defaults
 
-- Apply style rules to new or modified code.
-- Do not clean up, reformat, or refactor unrelated nearby code unless explicitly requested.
-- Avoid mixing formatting-only changes with behavior changes.
-- A local rule exception is allowed when required by a framework, external interface,
-  generated format, hardware constraint, or established project convention.
-- Keep exceptions local and explain the reason in the change summary or nearby documentation.
-- Do not create a project-wide abstraction only to avoid one local exception.
+## Work scope
 
-## Secrets and environment-specific values
+- Make the smallest change that satisfies the request.
+- Do not refactor, reformat, rename, or clean up unrelated code.
+- Do not mix formatting-only changes with behavior changes.
+- Preserve public ROS interfaces, file formats, frame names, package names, and
+  installed paths unless all users are updated together.
+- Before editing, state the plan and likely files.
+- After editing, summarize changes, tests, behavior changes, and remaining risks.
 
-- Do not commit credentials, tokens, private keys, passwords, or sensitive URLs.
-- Avoid hard-coded user home paths, machine-specific absolute paths, device serial
-  numbers, and fixed network addresses when they vary by environment.
-- Put genuinely environment-specific values in documented configuration or environment variables.
-- Do not move a stable constant into configuration unless it is expected to vary.
+## Simplicity
 
-## Simplicity and abstraction policy
+- Prefer explicit code with the fewest concepts.
+- Add a function, class, wrapper, dataclass, type alias, macro, or abstraction
+  only when it reduces total reasoning, testing, or change effort.
+- Do not design for hypothetical future reuse.
+- Prefer small obvious duplication over premature abstraction.
+- Do not split cohesive code into tiny helpers only to reduce line count.
+- Prefer module functions when no meaningful state or lifecycle exists.
+- Avoid generic names and modules such as `Manager`, `Helper`, `Utils`, or
+  `common.py` when a domain-specific name is available.
 
-Do not add a function, class, interface, wrapper, configuration object, design
-pattern, or generic mechanism unless it reduces the total effort needed to
-understand, test, or safely change the code.
+## Readability
 
-A new abstraction must provide at least one concrete benefit:
+- Keep the main control flow understandable in one pass.
+- Avoid deep nesting, hidden side effects, clever expressions, and vague names.
+- Separate ROS or hardware I/O from pure policy, conversion, and validation when
+  that separation provides a clear testable boundary.
+- Validate untrusted data once at a clear boundary. Do not repeat the same check
+  throughout internal helpers.
+- Type hints should clarify important interfaces, not annotate every local value.
+- Avoid complex generic typing for one implementation or speculative reuse.
 
-- isolate a real dependency or side effect,
-- represent a stable domain concept,
-- remove meaningful repeated logic,
-- enforce an important invariant,
-- or make independently testable logic possible.
+## Comments and documentation
 
-Moving code behind another name is not, by itself, a simplification.
-Do not optimize for hypothetical future reuse.
-
-- Do not introduce factories, registries, plugin systems, strategy classes,
-  dependency-injection containers, or generic frameworks unless the current
-  task requires them.
-- Do not add extension points without a concrete caller or use case.
-- Prefer a small amount of obvious duplication over a premature abstraction.
-
-## Readability rules
-
-- Prefer named functions over complex inline logic.
-- Avoid deeply nested control flow.
-- Prefer early returns and guard clauses when they improve readability.
-- Avoid hidden side effects.
-- Avoid mixing parsing, validation, state update, ROS I/O, and logging in one function.
-- A function should usually do one thing.
-
-## Function size
-
-- Function length is a warning signal, not a target.
-- Prefer functions under 40 lines when this preserves a cohesive workflow.
-- Do not split a function only to satisfy a line-count guideline.
-- A cohesive longer function is preferable to several tiny helpers that require
-  jumping between symbols to understand one workflow.
-- Extract a helper only when it has a clear responsibility, removes meaningful
-  duplication, isolates testable logic, or establishes a real dependency boundary.
-- Do not extract one-line or two-line helpers that merely rename obvious code.
-- If a function exceeds 60 lines, explain why it should remain as one function.
-- Avoid functions with more than 3 levels of indentation.
-- Parameter count is a readability signal, not a hard limit.
-- Group parameters only when they form a stable domain concept or are commonly
-  passed together.
-- Do not introduce a dataclass solely to reduce the visible parameter count.
-
-## Class design
-
-- Do not create a class only to group related functions.
-- Prefer module-level functions when there is no meaningful state, lifecycle,
-  ownership, resource management, or polymorphic behavior.
-- Avoid static-method-only classes. Use a module or namespace instead.
-- Avoid classes whose only method is `run`, `execute`, `process`, or `handle`
-  unless they implement an established interface.
-- Prefer composition over inheritance.
-- Do not introduce an abstract base class until at least two real implementations
-  or a required framework interface exist.
-
-## Type hint restraint
-
-- Type hints must make an interface easier to understand, not merely make it longer.
-- Use type hints for public functions, shared data structures, and non-trivial
-  boundaries where they prevent ambiguity.
-- Simple local variables and obvious private helpers do not require annotations.
-- Do not annotate every intermediate variable.
-- Avoid complex nested generic types in function signatures.
-- Introduce a named type alias only when it represents a stable domain concept or
-  significantly improves repeated signatures.
-- Do not create `Protocol`, `Generic`, `TypeVar`, overload sets, or custom typing
-  utilities for a single implementation or hypothetical future reuse.
-- Prefer a simple concrete type over a highly generic interface when only one
-  concrete use exists.
-- Do not use `Any` merely to silence the type checker. Fix the boundary or document
-  why the dynamic value is unavoidable.
-- Do not add casts, ignores, or typing-only wrappers unless the reason is clear.
-- Runtime validation belongs at trust boundaries; type hints do not replace it.
-
-## Validation boundaries
-
-- Validate data at trust boundaries such as user input, ROS messages, parameters,
-  files, network or serial input, hardware responses, and public APIs.
-- Do not repeatedly validate the same invariant in every internal helper.
-- After validation at a clear boundary, internal functions may rely on the
-  documented invariant.
-- Do not add defensive checks for impossible states without evidence that the
-  state can occur.
-- Avoid broad exception handling around code that cannot meaningfully recover.
-
-## File size
-
-- Keep files focused on one responsibility.
-- If a Python file exceeds about 400 lines, consider splitting by responsibility.
-- If a C++ source file exceeds about 700 lines, consider splitting by responsibility.
-- Header files should expose interfaces, not large implementations.
-- Do not create generic `utils`, `helpers`, or `common` modules when a
-  domain-specific module name is available.
-
-## C/C++ rules
-
-- Prefer clear ownership and lifetime.
-- Avoid raw owning pointers.
-- Prefer RAII.
-- Prefer explicit names over abbreviations.
-- Avoid complex templates unless explicitly needed.
-- Avoid macros unless there is no safer alternative.
-- Avoid lambdas by default.
-- Lambdas are allowed only for short local operations, usually 1 to 3 lines.
-- Do not use lambdas that capture many variables or hide important control flow.
-- Prefer named helper functions for non-trivial logic.
-
-## Python rules
-
-- Follow PEP 8 style.
-- Prefer dataclasses only for real structured configuration or state.
-- Avoid nested functions unless the scope is truly local and readability improves.
-- Avoid complex lambdas. Lambdas are allowed only for simple key functions.
-- Prefer explicit control flow over dense comprehensions when logic is non-trivial.
-- Do not hide important side effects inside property methods.
-- Avoid metaprogramming, reflection, dynamic attribute access, and decorators with
-  hidden behavior unless the task clearly requires them.
-- Avoid `getattr`, `setattr`, `globals`, `locals`, `eval`, and `exec` for normal
-  application control flow.
-- Avoid multiple inheritance except for framework-required mixins.
-
-## Comments and docstrings
-
+- Keep identifiers, API names, ROS interfaces, units, frames, and technical terms
+  in English.
 - Write comments and docstrings in concise, natural Korean.
-- Keep identifiers, API names, ROS interfaces, units, coordinate frames, and
-  established technical terms in their original English form.
-- Explain why, constraints, assumptions, ordering, units, frames, or safety
-  implications instead of repeating obvious code.
-- Do not add comments or docstrings mechanically to every line, function, or class.
-- Prefer clearer names and simpler control flow over explanatory comments.
-- Do not leave commented-out code; use version control instead.
-- Update or remove comments when the related behavior changes.
+- Explain reasons, constraints, units, frames, ordering, workarounds, or safety
+  implications. Do not repeat obvious code.
+- Do not add comments or docstrings mechanically to every line or helper.
+- Do not leave commented-out code. Update or remove stale comments.
+- Follow `docs/python-docstring-style.md` for Python documentation.
 
-## URDF, Xacro, and SDF rules
+## Safety and environment
 
-- Follow `docs/urdf-xacro-style.md` for `.urdf`, `.xacro`, `.sdf`, and related XML files.
-- Use two-space indentation, one readable element per line, and self-closing tags for empty elements.
-- Keep tag names, attributes, link names, joint names, frame names, and Xacro identifiers in English.
-- Write only necessary XML comments in concise Korean while keeping technical terms and code symbols in English.
-- Use SI units and treat every `origin` as an explicit parent-to-child frame transform.
-- Do not change public link, joint, frame, transmission, plugin, or controller names without updating downstream users.
-- Do not create Xacro properties or macros for every literal or one trivial call site.
-- Avoid nested macro layers and clever expressions that make the expanded robot model difficult to inspect.
-- Treat joint limits, axes, mass, center of mass, inertia, collision geometry, and plugin settings as behavior- and safety-sensitive data.
-- Do not leave disabled XML blocks inside comments; use version control instead.
-- Expand and validate changed Xacro or URDF files when tools are available.
+- Keep command ownership, stop behavior, state transitions, and failure recovery
+  explicit.
+- Follow `docs/safety.md` for motion, hardware, and safety-sensitive changes.
+- Do not commit credentials, tokens, private keys, passwords, or sensitive URLs.
+- Avoid hard-coded user paths, device serials, and network addresses when they
+  vary by environment.
+- Do not edit generated files directly. Edit the source schema, template, Xacro,
+  message definition, or generator input.
 
-## ROS2 rules
+## ROS and robot-description files
 
-- Keep ROS I/O separate from core business logic when practical.
-- Do not mix parameter loading, subscription callbacks, state transitions, and publishing in one large function.
-- Use clear names for topics, services, parameters, and state transitions.
-- Log important state changes.
-- Avoid excessive logging inside high-frequency callbacks.
-- Do not change launch/config behavior unless explicitly requested.
+- Keep callbacks non-blocking and avoid excessive logging in high-rate paths.
+- Do not hide remappings, controller selection, command ownership, or
+  safety-relevant parameter overrides.
+- Follow `docs/urdf-xacro-style.md` for URDF, Xacro, SDF, and related XML files.
+- Treat frame transforms, joint limits, axes, mass, inertia, collision geometry,
+  and plugin settings as behavior- and safety-sensitive data.
+- Use SI units unless an external interface requires otherwise.
 
-## Review behavior
+## Validation
+
+- Run the most relevant checks already available in the project environment.
+- Do not install tools, upgrade dependencies, or change the environment unless
+  requested.
+- Test meaningful behavior, boundaries, state transitions, and failure paths.
+- Do not weaken assertions or tolerances only to make tests pass.
+- Use simulation, dry-run, or no-hardware validation before real hardware when
+  practical.
+- Record checks that could not run and the remaining risk.
+
+## Review requests
 
 When asked to review code:
 
-- Do not edit files first.
-- First inspect the smallest necessary set of files.
-- Report issues by severity:
-  - Critical: correctness, safety, data loss, runtime failure
-  - Major: maintainability, architecture, hidden coupling
-  - Minor: naming, formatting, comments
-- Include exact file/function names.
-- Prefer actionable suggestions.
-- Do not nitpick style that is already handled by formatters.
-- Check whether a new function, class, interface, dataclass, enum, type alias,
-  protocol, wrapper, or generic abstraction reduces total reasoning effort.
-- For URDF, Xacro, and SDF changes, check frame direction, units, joint axes and
-  limits, inertia, collision geometry, macro complexity, names, and expanded output.
+- Inspect before editing.
+- Report actionable findings as Critical, Major, or Minor.
+- Include exact paths, lines, or symbols and explain the concrete risk.
+- Do not nitpick formatting already handled by tools.
+- Follow `docs/code-review.md`.
 
-## References
+## Guides
 
-See:
-
-- `docs/code-style.md`
-- `docs/code-review.md`
-- `docs/python-docstring-style.md`
-- `docs/urdf-xacro-style.md`
-- `docs/safety.md`
+- `docs/code-style.md`: language, ROS 2, YAML, launch, and build rules
+- `docs/code-review.md`: review checklist and output format
+- `docs/python-docstring-style.md`: Korean comments and Python docstrings
+- `docs/urdf-xacro-style.md`: URDF, Xacro, SDF, frames, and XML style
+- `docs/safety.md`: robot and hardware safety changes
