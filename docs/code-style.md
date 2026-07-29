@@ -175,8 +175,12 @@ Avoid broad exception handling where the code cannot recover meaningfully.
 ## Comments and Documentation
 
 Comments explain *why*, constraints, ordering, units, frames, or safety
-implications; they do not narrate obvious statements. Keep all comments and
-docstrings in English.
+implications; they do not narrate obvious statements.
+
+Write comments and docstrings in concise, natural Korean. Keep code identifiers,
+official API names, library names, ROS interface names, units, coordinate frames,
+and established technical terms in their original English form. Do not translate
+technical terms when the Korean wording would be less clear.
 
 Follow [`python-docstring-style.md`](python-docstring-style.md) for module,
 class, function, and ROS-facing documentation. In particular, document public
