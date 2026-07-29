@@ -20,6 +20,32 @@ Codex must follow these rules for all code changes.
   - How to test it
   - Any behavior changes or risks
 
+## Rule precedence and scope
+
+When rules conflict, follow them in this order:
+
+1. Safety and correctness requirements
+2. Existing project-specific conventions and public interfaces
+3. This `AGENTS.md`
+4. Language- or format-specific guides in `docs/`
+5. Formatter defaults
+
+- Apply style rules to new or modified code.
+- Do not clean up, reformat, or refactor unrelated nearby code unless explicitly requested.
+- Avoid mixing formatting-only changes with behavior changes.
+- A local rule exception is allowed when required by a framework, external interface,
+  generated format, hardware constraint, or established project convention.
+- Keep exceptions local and explain the reason in the change summary or nearby documentation.
+- Do not create a project-wide abstraction only to avoid one local exception.
+
+## Secrets and environment-specific values
+
+- Do not commit credentials, tokens, private keys, passwords, or sensitive URLs.
+- Avoid hard-coded user home paths, machine-specific absolute paths, device serial
+  numbers, and fixed network addresses when they vary by environment.
+- Put genuinely environment-specific values in documented configuration or environment variables.
+- Do not move a stable constant into configuration unless it is expected to vary.
+
 ## Simplicity and abstraction policy
 
 Do not add a function, class, interface, wrapper, configuration object, design
