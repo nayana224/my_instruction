@@ -56,6 +56,8 @@ Do not focus on formatting that the configured tools can check automatically.
 - Is validation performed once at a clear trust boundary instead of repeated in
   every internal helper?
 - Are defensive checks tied to states that can actually occur?
+- Were only validation tools already available in the project environment used,
+  unless environment changes were explicitly requested?
 
 ### Maintainability and Readability
 
@@ -102,6 +104,41 @@ For Python typing changes:
   network, serial, or hardware data?
 - Did typing changes require substantial runtime structure with little benefit
   to human understanding?
+
+### Configuration, Launch, and Build Checks
+
+For YAML, launch, `package.xml`, and `CMakeLists.txt` changes:
+
+- Are parameter names explicit, stable, and clear about units where necessary?
+- Are changed defaults, ranges, dependencies, and safety implications validated?
+- Are unused, deprecated, duplicated, or commented-out parameters removed?
+- Does a launch argument represent a value that is genuinely expected to vary?
+- Are parameters, remappings, namespaces, conditions, controller selection, and
+  command ownership visible near the affected node?
+- Is `OpaqueFunction` or runtime launch logic necessary, or would declarative
+  launch actions be clearer?
+- Are new package dependencies directly required by current code or interfaces?
+- Are obsolete dependencies removed after their final use disappears?
+- Are target names, install paths, exports, executables, and package interfaces
+  preserved or all downstream users updated?
+
+### URDF, Xacro, and SDF Checks
+
+For robot-description changes:
+
+- Was the source Xacro or template changed instead of generated URDF or SDF output?
+- Are public link, joint, TF frame, controller, and transmission names preserved?
+- Are parent-child frame relationships, `origin`, joint axes, and SI units correct?
+- Do link names, TF frame names, sensor plugin frames, and controller references
+  remain consistent?
+- Are mass, center of mass, inertia, collision geometry, limits, mimic relations,
+  damping, and friction changes supported by a physical or documented source?
+- Does a new Xacro property or macro represent real reuse or a stable component
+  boundary rather than merely shortening the file?
+- Did the change avoid unrelated XML attribute or block reordering?
+- Was expanded output checked for unresolved substitutions, duplicate names,
+  invalid references, and unexpected links, joints, or frames?
+- Does the change follow [`urdf-xacro-style.md`](urdf-xacro-style.md)?
 
 ### Language-Specific Checks
 
@@ -172,8 +209,12 @@ safety, validation, test gaps, simplicity, maintainability, and readability in
 that order.
 
 For ROS 2 changes, check state transitions, QoS, callback blocking, executor or
-shared-state safety, shutdown cleanup, parameters, command ownership, and safe
-failure behavior when relevant.
+shared-state safety, shutdown cleanup, parameters, launch behavior, package
+metadata, command ownership, and safe failure behavior when relevant.
+
+For URDF, Xacro, or SDF changes, check source-versus-generated files, frame and
+joint naming, transforms, units, axes, limits, inertia, collision geometry,
+plugin references, generated output, and unnecessary macro abstraction.
 
 Check for over-fragmented functions, unnecessary classes, wrappers, factories,
 dataclasses, generic abstractions, speculative extension points, repeated
