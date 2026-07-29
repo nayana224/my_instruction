@@ -313,3 +313,33 @@ the function name.
   the remaining risk.
 - Do not treat formatting-only validation as a substitute for runtime, interface,
   configuration, or hardware-safety checks.
+
+## Generated files
+
+- Do not edit generated files directly.
+- Edit the source schema, template, Xacro, message definition, or generator input.
+- Do not commit build output, caches, logs, or temporary generated files unless the
+  repository explicitly versions them.
+- When generated artifacts are versioned, record the source and regeneration command.
+- Review regenerated output for unexpected interface, frame, message, or configuration changes.
+
+## Secrets and environment-specific values
+
+- Do not commit credentials, tokens, private keys, passwords, or sensitive URLs.
+- Avoid hard-coded user home paths, machine-specific absolute paths, device serial
+  numbers, and fixed network addresses when they vary by deployment.
+- Store genuinely variable values in documented configuration or environment variables.
+- Keep safe defaults explicit and validate required environment-specific values at startup.
+- Do not turn a stable implementation constant into configuration without a real variation need.
+- Keep example configuration free of real credentials and private infrastructure details.
+
+## Tests
+
+- Test externally meaningful behavior, state transitions, boundary values, and failure paths.
+- Keep each test focused on one behavior and use names that state the condition and expected result.
+- Avoid tests that duplicate implementation details or assert incidental call structure.
+- Prefer real pure logic, small fakes, or lightweight fixtures over broad mocking.
+- Do not add mocks when a simple value, fake, or dependency boundary is sufficient.
+- Do not weaken assertions, skip tests, or broaden tolerances only to make a failure pass.
+- For ROS-facing behavior, test pure policy separately and add the smallest useful integration check.
+- For hardware-sensitive behavior, identify a no-hardware, simulation, or dry-run check before real-device testing.
