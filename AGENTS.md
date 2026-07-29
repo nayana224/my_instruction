@@ -147,6 +147,18 @@ Do not optimize for hypothetical future reuse.
   application control flow.
 - Avoid multiple inheritance except for framework-required mixins.
 
+## Comments and docstrings
+
+- Write comments and docstrings in concise, natural Korean.
+- Keep identifiers, API names, ROS interfaces, units, coordinate frames, and
+  established technical terms in their original English form.
+- Explain why, constraints, assumptions, ordering, units, frames, or safety
+  implications instead of repeating obvious code.
+- Do not add comments or docstrings mechanically to every line, function, or class.
+- Prefer clearer names and simpler control flow over explanatory comments.
+- Do not leave commented-out code; use version control instead.
+- Update or remove comments when the related behavior changes.
+
 ## ROS2 rules
 
 - Keep ROS I/O separate from core business logic when practical.
