@@ -1,35 +1,46 @@
 # Codex Readability Rules
 
-이 폴더는 Codex를 사용할 때 코드 가독성과 리뷰 가능성을 유지하기 위한 기본 규칙 파일 모음입니다.
+Codex가 작은 범위에서 읽기 쉽고 안전한 코드를 작성하도록 돕는 규칙 모음입니다.
 
-## Files
+## 적용
 
-- `AGENTS.md`: Codex가 따라야 할 최상위 작업 규칙
-- `docs/code-style.md`: C/C++/Python/ROS2 코드 작성 원칙
-- `docs/code-review.md`: 코드 리뷰 체크리스트와 리뷰 출력 형식
-- `docs/python-docstring-style.md`: 한글 주석과 Python docstring 작성 원칙
-- `docs/urdf-xacro-style.md`: URDF/Xacro/SDF 태그, 구조, 주석 작성 원칙
-- `docs/safety.md`: 로봇 명령과 안전 관련 변경 검토 원칙
-
-## How to use
-
-repo 루트에 필요한 파일을 복사하세요.
+프로젝트 루트에 복사합니다.
 
 ```bash
 cp AGENTS.md /path/to/your_repo/
 cp -r docs /path/to/your_repo/
 ```
 
-코드 식별자는 영어로 유지하고, 주석과 docstring은 짧고 자연스러운 한글로 작성합니다. API 이름, ROS interface, 단위, 좌표계, 기술 용어는 원문을 유지합니다.
+Codex는 먼저 `AGENTS.md`를 읽고, 작업에 필요한 세부 문서만 확인하면 됩니다.
 
-URDF, Xacro, SDF 같은 XML 기반 로봇 설명 파일은 태그 정렬, `origin`, frame, 단위, joint limit, inertia, Xacro macro 사용 기준을 위해 `docs/urdf-xacro-style.md`를 함께 적용합니다.
+## 핵심 원칙
 
-Codex에 코드 리뷰를 시킬 때는 다음처럼 요청하세요.
+- 요청한 범위만 작게 수정
+- 불필요한 추상화와 미래 대비 코드 금지
+- 코드 식별자는 영어, 주석과 docstring은 간결한 한글
+- ROS interface, TF frame, 단위, 안전 동작 보존
+- 실행한 검증과 남은 위험 보고
+
+## 문서
+
+- `AGENTS.md`: 모든 작업에 적용되는 핵심 규칙
+- `docs/code-style.md`: Python, C/C++, ROS 2, YAML, launch, build 규칙
+- `docs/code-review.md`: 리뷰 체크리스트
+- `docs/python-docstring-style.md`: 한글 주석과 docstring
+- `docs/urdf-xacro-style.md`: URDF, Xacro, SDF, XML 태그와 frame
+- `docs/safety.md`: 로봇과 하드웨어 안전 변경
+
+## 요청 예시
 
 ```text
-Review this code without editing files.
-Use AGENTS.md and docs/code-review.md.
-Focus on readability, function size, unnecessary wrappers, complex lambdas,
-nested control flow, file responsibility, comment quality, URDF/Xacro structure,
-and ROS2 maintainability.
+AGENTS.md를 따라 이 파일만 수정해줘.
+관련 없는 코드는 정리하지 마.
+변경 후 실행한 테스트와 남은 위험을 알려줘.
+```
+
+코드 리뷰:
+
+```text
+AGENTS.md와 docs/code-review.md를 따라 리뷰해줘.
+파일은 수정하지 말고, 실제 위험이 있는 항목만 보고해줘.
 ```
