@@ -182,6 +182,17 @@ official API names, library names, ROS interface names, units, coordinate frames
 and established technical terms in their original English form. Do not translate
 technical terms when the Korean wording would be less clear.
 
+- Do not comment every line, assignment, branch, or function call.
+- Do not restate code in natural language.
+- Prefer clearer names and simpler control flow over explanatory comments.
+- Do not add docstrings mechanically to every function, method, or class.
+- Short private helpers with self-explanatory names do not require docstrings.
+- A docstring must add information not already obvious from the name, signature,
+  type hints, and nearby context.
+- Do not leave commented-out code; use version control instead.
+- Update or remove comments whenever the related behavior changes.
+- Avoid vague TODO comments. State the concrete missing work and why it remains.
+
 Follow [`python-docstring-style.md`](python-docstring-style.md) for module,
 class, function, and ROS-facing documentation. In particular, document public
 ROS contracts and safety-relevant side effects when they are not obvious from
