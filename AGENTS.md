@@ -159,6 +159,20 @@ Do not optimize for hypothetical future reuse.
 - Do not leave commented-out code; use version control instead.
 - Update or remove comments when the related behavior changes.
 
+## URDF, Xacro, and SDF rules
+
+- Follow `docs/urdf-xacro-style.md` for `.urdf`, `.xacro`, `.sdf`, and related XML files.
+- Use two-space indentation, one readable element per line, and self-closing tags for empty elements.
+- Keep tag names, attributes, link names, joint names, frame names, and Xacro identifiers in English.
+- Write only necessary XML comments in concise Korean while keeping technical terms and code symbols in English.
+- Use SI units and treat every `origin` as an explicit parent-to-child frame transform.
+- Do not change public link, joint, frame, transmission, plugin, or controller names without updating downstream users.
+- Do not create Xacro properties or macros for every literal or one trivial call site.
+- Avoid nested macro layers and clever expressions that make the expanded robot model difficult to inspect.
+- Treat joint limits, axes, mass, center of mass, inertia, collision geometry, and plugin settings as behavior- and safety-sensitive data.
+- Do not leave disabled XML blocks inside comments; use version control instead.
+- Expand and validate changed Xacro or URDF files when tools are available.
+
 ## ROS2 rules
 
 - Keep ROS I/O separate from core business logic when practical.
@@ -183,6 +197,8 @@ When asked to review code:
 - Do not nitpick style that is already handled by formatters.
 - Check whether a new function, class, interface, dataclass, enum, type alias,
   protocol, wrapper, or generic abstraction reduces total reasoning effort.
+- For URDF, Xacro, and SDF changes, check frame direction, units, joint axes and
+  limits, inertia, collision geometry, macro complexity, names, and expanded output.
 
 ## References
 
@@ -190,3 +206,6 @@ See:
 
 - `docs/code-style.md`
 - `docs/code-review.md`
+- `docs/python-docstring-style.md`
+- `docs/urdf-xacro-style.md`
+- `docs/safety.md`
