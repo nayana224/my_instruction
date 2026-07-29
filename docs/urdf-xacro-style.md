@@ -45,6 +45,7 @@ Split long elements so that each attribute is easy to scan:
 - Keep related numeric attributes together, such as `xyz` with `rpy` and `lower` with `upper`.
 - Use self-closing tags when an element has no child content.
 - Do not compress nested robot structure into one long XML line.
+- Attribute and block ordering is a consistency guideline, not a reason to reformat unrelated existing XML.
 - Do not reorder attributes or blocks without a readability or consistency benefit.
 
 ## Origins, frames, and units
@@ -68,6 +69,15 @@ Avoid:
 <origin xyz="0 0 0.08" rpy="0 1.570796 0"/>
 ```
 
+## Frame naming
+
+- Use stable English frame names with a consistent `snake_case` convention.
+- Use names that describe the physical or semantic frame, such as `camera_link`, `camera_color_optical_frame`, or `tool0`.
+- Do not encode temporary implementation details, dates, or experiment numbers in public frame names.
+- Preserve established TF frame names unless all publishers, consumers, launch files, configuration files, and saved data are updated together.
+- Document non-obvious parent-child relationships, calibration offsets, and optical-frame conventions.
+- Check that link names, TF frame names, sensor plugin frame settings, and controller references remain consistent.
+
 ## Comments
 
 - Write comments in concise, natural Korean.
@@ -89,6 +99,14 @@ Avoid:
 - Avoid nested macro layers that require opening several files to understand one link or joint.
 - Prefer direct XML over clever Xacro expressions when the direct form is easier to inspect.
 - Avoid complex arithmetic and conditionals inside attributes. Move important calculations to clearly named properties.
+
+## Generated robot-description files
+
+- Edit the source Xacro, template, or generator input instead of generated URDF or SDF output.
+- Do not commit generated robot-description files unless the repository explicitly treats them as versioned artifacts.
+- Clearly mark generated files and record the command used to regenerate them when they must be versioned.
+- Do not make a manual fix only in generated output; apply the fix to the source and regenerate.
+- Review generated output for unresolved substitutions, duplicate names, invalid references, and unexpected link, joint, or frame changes.
 
 ## Geometry, inertia, and collision
 
@@ -133,4 +151,4 @@ Also verify as applicable:
 - inertial values do not cause simulation instability,
 - `robot_state_publisher`, controllers, and simulator plugins still load.
 
-If a validation tool cannot run, record what was not verified and the remaining risk.
+Use the most relevant validation tools already available in the project environment. Do not install tools or change the environment automatically unless requested. If a validation tool cannot run, record what was not verified and the remaining risk.
