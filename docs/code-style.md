@@ -253,3 +253,63 @@ the function name.
 - For changes that can publish motion commands or alter command ownership,
   follow [`safety.md`](safety.md) and validate without hardware before robot
   testing whenever possible.
+
+## YAML and configuration files
+
+- Use two spaces for indentation and never use tabs.
+- Keep parameter names in English and prefer explicit domain-specific names.
+- Include units in names when values may be ambiguous, such as
+  `timeout_seconds`, `max_speed_mps`, or `angle_radians`.
+- Keep related parameters together, but avoid deeply nested structures when a
+  flatter structure is easier to inspect.
+- Do not keep unused, deprecated, duplicated, or commented-out parameters.
+- Add a concise Korean comment only when a unit, valid range, dependency,
+  hardware assumption, compatibility constraint, or safety implication is not
+  obvious.
+- Do not duplicate the same configuration value across files without a clear
+  ownership reason.
+- Treat parameter renames and default-value changes as interface changes.
+- Validate ranges, units, required keys, and dependent settings at startup or at
+  the configuration-loading boundary.
+
+## ROS 2 launch files
+
+- Keep launch files declarative and easy to inspect.
+- Avoid `OpaqueFunction` and runtime Python logic unless normal launch actions
+  and substitutions cannot express the requirement clearly.
+- Do not create launch arguments for values that are not expected to vary.
+- Keep a node's parameters, remappings, namespace, condition, and output behavior
+  visible near that node declaration.
+- Split a launch file only when the extracted file represents a reusable
+  subsystem or independently launchable workflow.
+- Do not hide safety-relevant parameter overrides, controller selection, command
+  ownership, or topic remapping behind helper layers.
+- Keep argument names and defaults stable unless all callers are updated.
+- Prefer explicit launch composition over clever substitution chains.
+
+## ROS package metadata and build files
+
+- Add only dependencies that are directly required by the package.
+- Do not add broad dependency groups or optional frameworks for hypothetical
+  future use.
+- Keep `package.xml` dependency declarations grouped consistently.
+- Keep `CMakeLists.txt` ordered by package discovery, targets, target
+  dependencies, installation, exports, and tests.
+- Do not hide build behavior inside complex macros unless the macro is reused
+  meaningfully and simplifies each caller.
+- Remove obsolete dependencies when their final use is removed.
+- Keep target names, install paths, exported interfaces, and generated artifacts
+  explicit.
+- Preserve package names, executable names, library names, and installed paths
+  unless all downstream launch files and packages are updated.
+
+## Validation tools
+
+- Run the most relevant validation tools already available in the project
+  environment.
+- Do not install tools, upgrade dependencies, or change the project environment
+  automatically unless requested.
+- If a recommended check cannot run, record the missing check, the reason, and
+  the remaining risk.
+- Do not treat formatting-only validation as a substitute for runtime, interface,
+  configuration, or hardware-safety checks.
