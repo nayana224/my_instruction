@@ -26,6 +26,15 @@ When rules conflict, follow this order:
   trivial localized edit, proceed directly and report the result.
 - After editing, summarize changes, tests, behavior changes, and remaining risks.
 
+## Large repositories
+
+- For multi-package repositories, cross-package changes, or unclear execution
+  paths, follow `docs/repository-workflow.md` before editing.
+- Identify the affected package, runtime path, configuration, public interfaces,
+  relevant tests, and important excluded areas.
+- Do not scan or refactor the whole repository when a smaller dependency path
+  can establish the requested change.
+
 ## Simplicity
 
 - Prefer explicit code with the fewest concepts.
@@ -67,6 +76,8 @@ When rules conflict, follow this order:
   explicit when the task involves stateful, asynchronous, motion, or hardware
   behavior.
 - Follow `docs/safety.md` for motion, hardware, and safety-sensitive changes.
+- Follow `docs/control-style.md` only for feedback controllers, trajectory
+  tracking, command generation, `ros2_control`, or timing-sensitive loops.
 - Do not commit credentials, tokens, private keys, passwords, or sensitive URLs.
 - Avoid hard-coded user paths, device serials, and network addresses when they
   vary by environment.
@@ -118,6 +129,8 @@ When asked to review code:
 - `docs/code-style.md`: language, ROS 2, YAML, launch, and build rules
 - `docs/code-review.md`: review checklist and output format
 - `docs/commit-style.md`: lightweight commit message rules
+- `docs/repository-workflow.md`: large and multi-package repository workflow
+- `docs/control-style.md`: robot controller and timing-sensitive loop rules
 - `docs/python-docstring-style.md`: Korean comments and Python docstrings
 - `docs/urdf-xacro-style.md`: URDF, Xacro, SDF, frames, and XML style
 - `docs/safety.md`: robot and hardware safety changes
