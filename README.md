@@ -49,6 +49,7 @@ new_robot_ws/
 └── docs/
     ├── code-style.md
     ├── code-review.md
+    ├── commit-style.md
     ├── python-docstring-style.md
     ├── urdf-xacro-style.md
     └── safety.md
@@ -89,6 +90,13 @@ Codex나 GPT에는 다음 순서로 참조하도록 요청합니다.
 
 예를 들어 순수 Python 함수 수정에는 ROS, launch, URDF, hardware 항목을 적용할 필요가 없습니다. 반대로 motion command, controller, URDF, TF를 변경할 때는 관련 안전 문서를 반드시 확인합니다.
 
+커밋을 만들 때만 `docs/commit-style.md`를 확인합니다. 기본 형식은 다음과 같습니다.
+
+```text
+feat: 그리퍼 힘 제한 설정 추가
+fix: 카메라 재연결 상태 초기화
+```
+
 ## 핵심 원칙
 
 - 요청한 범위만 작게 수정
@@ -96,6 +104,7 @@ Codex나 GPT에는 다음 순서로 참조하도록 요청합니다.
 - 단순한 adapter와 callback을 억지로 여러 helper로 분리하지 않기
 - 코드 식별자는 영어, 주석과 docstring은 간결한 한글
 - ROS interface, TF frame, 단위, 안전 동작 보존
+- 커밋은 `<type>: <한글 요약>` 형식으로 작성
 - 작업과 관련된 검증만 우선 수행하고 남은 위험 보고
 
 ## 문서
@@ -103,6 +112,7 @@ Codex나 GPT에는 다음 순서로 참조하도록 요청합니다.
 - `AGENTS.md`: 모든 작업에 적용되는 핵심 규칙
 - `docs/code-style.md`: Python, C/C++, ROS 2, YAML, launch, build 규칙
 - `docs/code-review.md`: 관련 항목만 적용하는 리뷰 체크리스트
+- `docs/commit-style.md`: 간단한 커밋 메시지 규칙
 - `docs/python-docstring-style.md`: 한글 주석과 docstring
 - `docs/urdf-xacro-style.md`: URDF, Xacro, SDF, XML 태그와 frame
 - `docs/safety.md`: 로봇과 하드웨어 안전 변경
