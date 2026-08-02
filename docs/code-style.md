@@ -17,6 +17,10 @@ enforced formatting baseline.
 - **Recommended**: apply when it improves clarity without adding unnecessary
   indirection.
 
+Apply only the sections relevant to the changed files and behavior. A pure
+Python utility change does not require ROS, launch, URDF, or hardware checks,
+and a small ROS adapter does not need extra layers merely to satisfy this guide.
+
 ## Design Principles
 
 1. **Required:** Keep each package and file focused on one clear responsibility.
@@ -25,10 +29,12 @@ enforced formatting baseline.
 3. **Recommended:** Prefer explicit, domain-specific names over clever
    abstractions.
 4. **Recommended:** Make small, behavior-preserving changes when refactoring.
-5. **Required:** Separate pure policy, conversion, and validation logic from
-   ROS I/O when it can be tested independently.
-6. **Required:** Keep safety-sensitive behavior explicit: command ownership,
-   stop behavior, state transitions, and failure recovery must not be hidden.
+5. **Recommended:** Separate pure policy, conversion, and validation logic from
+   ROS I/O when the logic is non-trivial, reused, safety-relevant, or clearly
+   benefits from independent testing. Keep trivial adapters direct.
+6. **Required:** Keep safety-sensitive behavior explicit when present: command
+   ownership, stop behavior, state transitions, and failure recovery must not be
+   hidden.
 7. **Required:** Prefer the solution with the fewest concepts, not necessarily
    the fewest lines.
 
@@ -50,7 +56,8 @@ Split a function when one or more of these conditions apply:
 - Its main control flow cannot be understood in one pass.
 - It has more than one externally visible side effect that are not part of one
   atomic workflow step.
-- A pure portion can be tested without ROS, hardware, or the filesystem.
+- A non-trivial pure portion can be tested without ROS, hardware, or the
+  filesystem.
 - Nested conditions make success, failure, or stop behavior unclear.
 
 Do not split a function only to satisfy a line-count guideline. A cohesive
@@ -58,9 +65,15 @@ longer function is preferable to several tiny helpers that force the reader to
 jump between symbols. Do not extract a helper that merely renames one or two
 obvious statements.
 
+Keep neighboring statements at a similar level of abstraction when practical.
+A high-level workflow should not mix domain decisions with low-level parsing,
+serialization, message-field manipulation, or device protocol details when a
+small, meaningful boundary would make the workflow clearer. Do not create that
+boundary when it only adds a pass-through call.
+
 ROS callbacks should validate minimal input, delegate non-trivial work to named
-methods, and avoid blocking work. A callback may remain small even when the
-delegated workflow is necessarily complex.
+methods, and avoid blocking work. A simple callback may remain direct when the
+entire behavior is already obvious.
 
 ## Class Design
 
@@ -121,9 +134,9 @@ dependency-injection containers, or extension hooks for hypothetical future
 reuse. A small amount of obvious duplication is preferable to a premature or
 incorrect abstraction.
 
-Avoid lambdas by default. A lambda is acceptable for a short, local,
-side-effect-free expression such as a sort key. Use a named function or method
-for callbacks and for any lambda that performs domain logic, mutation, or I/O.
+Use lambdas only for short, local, side-effect-free expressions such as sort
+keys. Use a named function or method for callbacks and for domain logic,
+mutation, I/O, or expressions that need explanation or reuse.
 
 ## Type Hints
 
@@ -205,8 +218,8 @@ the function name.
 - **Required:** Do not silently swallow exceptions.
 - **Required:** Include actionable context in errors, including the affected
   resource, requested operation, and relevant state when safe to log.
-- **Required:** Make failure and safe-stop paths explicit for motor commands,
-  tracking, localization, and autonomous workflows.
+- **Required:** Make failure and safe-stop paths explicit for code that can
+  command motors or control tracking, localization, or autonomous workflows.
 - **Recommended:** Log important state changes once; avoid repeated logs in
   high-frequency callbacks.
 
@@ -240,8 +253,10 @@ the function name.
 
 ## ROS 2
 
+Apply this section only to ROS-facing code and configuration.
+
 - Keep ROS I/O, parameter loading, state-transition rules, and business logic
-  separated where practical.
+  separated when the boundary is non-trivial and useful for testing or clarity.
 - Keep topic, service, action, parameter, frame, and mode names explicit and
   stable.
 - Validate parameters at startup or before first use, including ranges, units,
@@ -249,10 +264,26 @@ the function name.
 - Choose QoS deliberately and document non-default QoS when compatibility is
   not self-evident.
 - Do not block executor callbacks with long I/O, waits, or retries.
-- Make timer, future, process, and shutdown cleanup ownership explicit.
+- Make timer, future, process, and shutdown cleanup ownership explicit when such
+  resources exist.
+- When callbacks can run concurrently and share mutable state, identify the
+  executor and callback-group behavior. Use message passing, callback groups, or
+  minimal locking deliberately, and do not hold a lock while waiting for a
+  service, action, future, or hardware I/O.
 - For changes that can publish motion commands or alter command ownership,
   follow [`safety.md`](safety.md) and validate without hardware before robot
   testing whenever possible.
+
+## Real-time and high-rate paths
+
+Apply this section only to controller update loops and other timing-sensitive
+paths.
+
+- Avoid blocking I/O, unbounded retries, and long lock waits.
+- Avoid repeated dynamic allocation when deterministic timing matters.
+- Avoid logging on every cycle.
+- Keep execution time bounded and move expensive work outside the loop.
+- Do not claim real-time safety without verifying the full call path.
 
 ## YAML and configuration files
 
@@ -335,11 +366,23 @@ the function name.
 
 ## Tests
 
-- Test externally meaningful behavior, state transitions, boundary values, and failure paths.
+- Test externally meaningful behavior, state transitions, boundary values, and
+  failure paths that are relevant to the changed code.
 - Keep each test focused on one behavior and use names that state the condition and expected result.
 - Avoid tests that duplicate implementation details or assert incidental call structure.
 - Prefer real pure logic, small fakes, or lightweight fixtures over broad mocking.
 - Do not add mocks when a simple value, fake, or dependency boundary is sufficient.
 - Do not weaken assertions, skip tests, or broaden tolerances only to make a failure pass.
-- For ROS-facing behavior, test pure policy separately and add the smallest useful integration check.
+- For ROS-facing behavior, test non-trivial pure policy separately and add the
+  smallest useful integration check.
 - For hardware-sensitive behavior, identify a no-hardware, simulation, or dry-run check before real-device testing.
+
+## Self-review before reporting completion
+
+- Re-read the diff rather than only the final files.
+- Confirm that every changed line is required by the request.
+- Check for accidental interface, unit, frame, default-value, and behavior changes.
+- Check that names describe domain intent and comments explain reasons.
+- For stateful or safety-sensitive changes, confirm that success, failure,
+  cancellation, cleanup, and safe-stop paths remain explicit.
+- Report tests not run and assumptions that remain unverified.
