@@ -1,175 +1,148 @@
 # Code Review Guide
 
-Use this guide when reviewing changes. Review findings before style
-suggestions, and do not edit files unless the review request explicitly asks
-for changes.
+Use this guide when reviewing changes. Inspect before editing, and do not edit
+files unless the review request explicitly asks for changes.
+
+Apply only the checks relevant to the changed files and behavior. Do not force
+ROS, hardware, launch, URDF, concurrency, or state-machine checks onto code that
+does not involve those concerns.
 
 ## Review Priorities
 
 Review in this order:
 
 1. Correctness and public-interface compatibility
-2. Runtime and hardware safety
+2. Runtime and hardware safety, when relevant
 3. Validation and test evidence
 4. Simplicity and maintainability
 5. Readability and style
 
-Do not focus on formatting that the configured tools can check automatically.
+Do not focus on formatting that configured tools can check automatically.
 
-## Required Review Checks
+## Core Review Checks
 
 ### Correctness and Compatibility
 
-- Does the code handle expected, invalid, and boundary inputs?
-- Are all state transitions valid, including repeated requests, cancellation,
-  failure, and recovery paths?
-- Does the change preserve topics, services, actions, parameters, TF frames,
-  CSV formats, and saved-pose formats, or update every downstream user?
-- Are configuration defaults, validation, and migration behavior clear?
-- Could the code behave differently on the Jetson or a different ROS 2 Humble
-  environment?
+- Does the code handle expected, invalid, and boundary inputs that can actually
+  occur?
+- Does the change preserve public APIs, data formats, defaults, and downstream
+  behavior, or update all affected users together?
+- For stateful or asynchronous workflows, are repeated requests, cancellation,
+  failure, recovery, and cleanup transitions valid?
+- For ROS-facing changes, are topics, services, actions, parameters, QoS, TF
+  frames, package names, executable names, and installed paths preserved or
+  intentionally migrated?
+- Could behavior differ on the target hardware, operating system, ROS
+  distribution, middleware, dependency version, or deployment environment?
 
 ### Runtime and Safety
 
-- Does any path publish motion commands, change command ownership, or alter
-  stop behavior? If so, is the safe failure path explicit?
-- Are motor, serial, LiDAR, tracking, localization, and autonomous-replay
-  failures handled conservatively?
-- Are callbacks non-blocking and safe for the configured executor model?
-- Are shared state, timers, futures, subprocesses, and shutdown cleanup owned
-  and synchronized clearly?
-- Is QoS compatible with the publishers and subscribers that must interoperate?
+Apply this section only when the change touches motion, hardware, concurrency,
+processes, timing-sensitive code, or safety-related state.
+
+- Does any path publish motion commands, change command ownership, or alter stop
+  behavior? If so, is the conservative failure path explicit?
+- Are hardware, communication, tracking, localization, and autonomous-workflow
+  failures handled safely?
+- Are callbacks and high-rate loops non-blocking for their executor or control
+  context?
+- When shared mutable state exists, are executor behavior, callback groups,
+  locking, ownership, and shutdown cleanup clear?
+- Are waits, retries, locks, allocation, and logging appropriate for any
+  real-time or high-rate path?
 - Does the change follow the applicable rules in [`safety.md`](safety.md)?
 
 ### Validation and Tests
 
-- Is there automated test coverage for changed pure logic, state transitions,
-  conversions, or error paths when practical?
-- Has the affected package been built and tested with
-  `colcon test --packages-select <package>` when the environment permits?
-- If tests cannot run, does the review record why and identify the remaining
-  risk?
-- For ROS interface or workflow changes, are the relevant topic, service,
-  action, launch, or integration checks identified?
-- For hardware-sensitive changes, is a no-hardware or dry-run check identified
-  before real-robot testing?
+- Is there test coverage for changed non-trivial logic, conversions, boundaries,
+  state transitions, and error paths when practical?
+- Were the most relevant existing build, test, lint, simulation, dry-run, or
+  integration checks run?
+- If a check could not run, is the reason and remaining risk recorded?
 - Is validation performed once at a clear trust boundary instead of repeated in
   every internal helper?
 - Are defensive checks tied to states that can actually occur?
-- Were only validation tools already available in the project environment used,
-  unless environment changes were explicitly requested?
+- Were project dependencies or tools left unchanged unless the task requested an
+  environment change?
 
 ### Maintainability and Readability
 
 - Can the main control flow be understood in one pass?
 - Is each function responsible for one cohesive operation?
-- Is pure policy or conversion logic separated from ROS I/O where useful?
+- Is non-trivial pure policy or conversion logic separated from I/O where that
+  creates a useful test or reasoning boundary?
 - Are names domain-specific and clear, including units where relevant?
-- Is nesting necessary, or can guards and named helpers make outcomes clearer?
-- Does any wrapper, lambda, property, or abstraction hide side effects or add
-  indirection without a useful boundary?
-- Is the file and package still the right owner for this behavior?
-- Was a function split only to satisfy a line-count guideline?
+- Are neighboring statements at a similar level of abstraction where practical?
+- Does any wrapper, lambda, property, class, or abstraction hide side effects or
+  add indirection without a useful boundary?
+- Was code split only to satisfy a line-count guideline?
 - Does the reader need to jump through several tiny helpers to understand one
   simple workflow?
-- Was a new function, class, interface, dataclass, enum, type alias, protocol,
-  factory, or wrapper introduced for only one trivial call site?
-- Does each new abstraction reduce total reasoning effort, or merely move code
-  behind another name?
-- Is a configuration object a real domain concept, or only a way to hide a long
-  parameter list?
-- Is inheritance solving a real substitution requirement, or merely sharing
-  implementation?
-- Does the change add terminology or extension points that the current domain
-  does not need?
+- Was a function, class, interface, dataclass, enum, type alias, protocol,
+  factory, registry, or wrapper introduced for one trivial call site or
+  hypothetical future reuse?
 - Would a small amount of direct, obvious code be easier to review and modify?
 
-### Type Hint Checks
+## File-Type-Specific Checks
 
-For Python typing changes:
+Use only the subsections that match the changed files.
 
-- Do type hints clarify a public, shared, or non-trivial boundary?
-- Are obvious local variables or trivial private helpers annotated without
-  adding useful information?
-- Are signatures harder to read because of deeply nested generic types?
-- Does a type alias represent a stable domain concept, or only shorten one
-  complicated signature?
-- Were `Protocol`, `Generic`, `TypeVar`, overloads, or custom typing helpers
-  introduced for a single implementation or hypothetical reuse?
-- Is `Any` hiding an unresolved boundary instead of documenting unavoidable
-  dynamic data?
-- Are `cast`, `# type: ignore`, or typing-only wrappers justified by a concrete
-  limitation?
-- Is runtime validation still present for untrusted ROS, file, parameter,
-  network, serial, or hardware data?
-- Did typing changes require substantial runtime structure with little benefit
-  to human understanding?
+### Python and C/C++
 
-### Configuration, Launch, and Build Checks
+- Do type hints clarify important public, shared, or non-trivial boundaries
+  without making signatures harder to read?
+- Are exceptions and error results handled with useful context?
+- Is ownership and lifetime clear in C/C++?
+- Are compiler warnings addressed rather than hidden?
+- Are templates, metaprogramming, reflection, decorators, protocols, or generic
+  mechanisms justified by a current need?
 
-For YAML, launch, `package.xml`, and `CMakeLists.txt` changes:
+### YAML, Launch, and Build Files
 
-- Are parameter names explicit, stable, and clear about units where necessary?
-- Are changed defaults, ranges, dependencies, and safety implications validated?
-- Are unused, deprecated, duplicated, or commented-out parameters removed?
+- Are names, units, defaults, ranges, dependencies, and safety implications
+  explicit?
 - Does a launch argument represent a value that is genuinely expected to vary?
-- Are parameters, remappings, namespaces, conditions, controller selection, and
-  command ownership visible near the affected node?
-- Is `OpaqueFunction` or runtime launch logic necessary, or would declarative
-  launch actions be clearer?
-- Are new package dependencies directly required by current code or interfaces?
-- Are obsolete dependencies removed after their final use disappears?
+- Are parameters, remappings, namespaces, controller selection, and command
+  ownership visible near the affected node?
+- Are new dependencies directly required by current code or interfaces?
 - Are target names, install paths, exports, executables, and package interfaces
   preserved or all downstream users updated?
 
-### URDF, Xacro, and SDF Checks
+### URDF, Xacro, and SDF
 
-For robot-description changes:
-
-- Was the source Xacro or template changed instead of generated URDF or SDF output?
-- Are public link, joint, TF frame, controller, and transmission names preserved?
-- Are parent-child frame relationships, `origin`, joint axes, and SI units correct?
-- Do link names, TF frame names, sensor plugin frames, and controller references
-  remain consistent?
-- Are mass, center of mass, inertia, collision geometry, limits, mimic relations,
-  damping, and friction changes supported by a physical or documented source?
-- Does a new Xacro property or macro represent real reuse or a stable component
-  boundary rather than merely shortening the file?
-- Did the change avoid unrelated XML attribute or block reordering?
+- Was the source Xacro or template changed instead of generated output?
+- Are public link, joint, TF frame, controller, transmission, and plugin names
+  preserved?
+- Are parent-child relationships, transforms, axes, limits, mass, inertia,
+  collision geometry, damping, friction, mimic relations, and SI units correct?
+- Is each physical change supported by a model, measurement, manufacturer
+  document, or clearly stated assumption?
 - Was expanded output checked for unresolved substitutions, duplicate names,
   invalid references, and unexpected links, joints, or frames?
 - Does the change follow [`urdf-xacro-style.md`](urdf-xacro-style.md)?
 
-### Language-Specific Checks
+## Review Comment Structure
 
-For Python:
+Each finding should distinguish:
 
-- Are type hints used where they clarify a public or non-trivial interface,
-  without being applied mechanically everywhere?
-- Are exceptions handled explicitly with useful context?
-- Are dataclasses or configuration objects used only when they clarify real
-  related fields and ownership?
-- Does the change avoid unnecessary metaprogramming, reflection, dynamic
-  attribute access, and decorators with hidden behavior?
-- Does the change follow `flake8` configuration and
-  [`python-docstring-style.md`](python-docstring-style.md)?
+1. **Observation:** what the code currently does.
+2. **Risk:** the concrete correctness, safety, compatibility, or maintenance
+   impact.
+3. **Evidence:** the relevant path, line, symbol, control flow, test result, or
+   interface.
+4. **Suggestion:** the smallest practical change that addresses the risk.
 
-For C and C++:
-
-- Is ownership and lifetime clear?
-- Are references, pointers, and callback captures safe?
-- Are headers minimal and implementation details kept private?
-- Are compiler warnings addressed rather than hidden?
-- Are templates or generic mechanisms solving more than one real use case?
+Avoid preference-only comments such as "this feels cleaner" or "I would write
+it differently" unless a concrete impact is identified.
 
 ## Finding Severity
 
 - **Critical:** Can cause unsafe robot motion, data loss, a crash, a deadlock,
   or an unrecoverable workflow failure.
-- **Major:** Can produce incorrect behavior, break an interface, leave a
-  failure path unhandled, or make a likely future change unsafe or unreliable.
-- **Minor:** Does not change behavior now, but reduces clarity, consistency, or
-  testability.
+- **Major:** Can produce incorrect behavior, break an interface, leave a likely
+  failure path unhandled, or make a current workflow unsafe or unreliable.
+- **Minor:** Does not change behavior now, but causes a concrete clarity,
+  consistency, or testability problem worth fixing.
 
 Do not invent a severity when there is no meaningful issue. State explicitly
 when no findings are identified and list any unverified risks or test gaps.
@@ -181,13 +154,13 @@ Summary:
 - Scope reviewed and verification performed.
 
 Critical:
-- [path:line or symbol] issue, concrete risk, suggested fix
+- [path:line or symbol] observation, concrete risk, evidence, suggested fix
 
 Major:
-- [path:line or symbol] issue, concrete risk, suggested fix
+- [path:line or symbol] observation, concrete risk, evidence, suggested fix
 
 Minor:
-- [path:line or symbol] issue, suggested fix
+- [path:line or symbol] observation, concrete impact, suggested fix
 
 Validation gaps:
 - Tests or runtime checks not run, reason, and remaining risk.
@@ -196,32 +169,23 @@ Suggested next step:
 - Highest-value follow-up action.
 ```
 
-Omit empty severity sections when there are findings only at other levels.
+Omit empty severity sections.
 
-## Codex Review Prompt
+## Codex and GPT Review Prompt
 
 ```text
 Review this code without editing files.
 
-Use docs/code-review.md and docs/code-style.md.
-Review correctness, public ROS interface compatibility, runtime and hardware
-safety, validation, test gaps, simplicity, maintainability, and readability in
-that order.
+Follow AGENTS.md and apply only the sections of docs/code-review.md and
+docs/code-style.md that are relevant to the changed files and behavior.
 
-For ROS 2 changes, check state transitions, QoS, callback blocking, executor or
-shared-state safety, shutdown cleanup, parameters, launch behavior, package
-metadata, command ownership, and safe failure behavior when relevant.
+Review correctness and public-interface compatibility first. Check runtime or
+hardware safety only when the change involves motion, hardware, concurrency,
+timing-sensitive paths, or safety-related state. Then review validation, test
+gaps, simplicity, maintainability, and readability.
 
-For URDF, Xacro, or SDF changes, check source-versus-generated files, frame and
-joint naming, transforms, units, axes, limits, inertia, collision geometry,
-plugin references, generated output, and unnecessary macro abstraction.
-
-Check for over-fragmented functions, unnecessary classes, wrappers, factories,
-dataclasses, generic abstractions, speculative extension points, repeated
-validation, and type hints that add complexity without clarifying an important
-interface.
-
-Report only actionable findings as Critical / Major / Minor with
-[path:line or symbol], risk, and suggested fix. Include a Validation gaps
-section. Do not edit files or nitpick formatting handled by configured tools.
+Report only actionable findings as Critical / Major / Minor. For each finding,
+include [path:line or symbol], observation, concrete risk, evidence, and the
+smallest practical fix. Include a Validation gaps section. Do not edit files,
+propose speculative architecture, or nitpick formatting handled by tools.
 ```

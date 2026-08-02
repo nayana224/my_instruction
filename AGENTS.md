@@ -22,8 +22,18 @@ When rules conflict, follow this order:
 - Do not mix formatting-only changes with behavior changes.
 - Preserve public ROS interfaces, file formats, frame names, package names, and
   installed paths unless all users are updated together.
-- Before editing, state the plan and likely files.
+- Before non-trivial or multi-file edits, state the plan and likely files. For a
+  trivial localized edit, proceed directly and report the result.
 - After editing, summarize changes, tests, behavior changes, and remaining risks.
+
+## Large repositories
+
+- For multi-package repositories, cross-package changes, or unclear execution
+  paths, follow `docs/repository-workflow.md` before editing.
+- Identify the affected package, runtime path, configuration, public interfaces,
+  relevant tests, and important excluded areas.
+- Do not scan or refactor the whole repository when a smaller dependency path
+  can establish the requested change.
 
 ## Simplicity
 
@@ -42,7 +52,8 @@ When rules conflict, follow this order:
 - Keep the main control flow understandable in one pass.
 - Avoid deep nesting, hidden side effects, clever expressions, and vague names.
 - Separate ROS or hardware I/O from pure policy, conversion, and validation when
-  that separation provides a clear testable boundary.
+  the logic is non-trivial, reused, safety-relevant, or clearly benefits from an
+  independent test boundary. Do not extract trivial pass-through helpers.
 - Validate untrusted data once at a clear boundary. Do not repeat the same check
   throughout internal helpers.
 - Type hints should clarify important interfaces, not annotate every local value.
@@ -62,8 +73,11 @@ When rules conflict, follow this order:
 ## Safety and environment
 
 - Keep command ownership, stop behavior, state transitions, and failure recovery
-  explicit.
+  explicit when the task involves stateful, asynchronous, motion, or hardware
+  behavior.
 - Follow `docs/safety.md` for motion, hardware, and safety-sensitive changes.
+- Follow `docs/control-style.md` only for feedback controllers, trajectory
+  tracking, command generation, `ros2_control`, or timing-sensitive loops.
 - Do not commit credentials, tokens, private keys, passwords, or sensitive URLs.
 - Avoid hard-coded user paths, device serials, and network addresses when they
   vary by environment.
@@ -85,17 +99,26 @@ When rules conflict, follow this order:
 - Run the most relevant checks already available in the project environment.
 - Do not install tools, upgrade dependencies, or change the environment unless
   requested.
-- Test meaningful behavior, boundaries, state transitions, and failure paths.
+- Test meaningful behavior, boundaries, state transitions, and failure paths
+  that are relevant to the changed code.
 - Do not weaken assertions or tolerances only to make tests pass.
 - Use simulation, dry-run, or no-hardware validation before real hardware when
   practical.
 - Record checks that could not run and the remaining risk.
+
+## Git commits
+
+- When creating commits, use `<type>: <한글 요약>`.
+- Prefer the basic types `feat`, `fix`, `refactor`, `docs`, `test`, and `chore`.
+- Keep one logical change per commit and do not invent new types unnecessarily.
+- Use `docs/commit-style.md` only when a commit is requested or prepared.
 
 ## Review requests
 
 When asked to review code:
 
 - Inspect before editing.
+- Apply only the checks relevant to the changed files and behavior.
 - Report actionable findings as Critical, Major, or Minor.
 - Include exact paths, lines, or symbols and explain the concrete risk.
 - Do not nitpick formatting already handled by tools.
@@ -105,6 +128,9 @@ When asked to review code:
 
 - `docs/code-style.md`: language, ROS 2, YAML, launch, and build rules
 - `docs/code-review.md`: review checklist and output format
+- `docs/commit-style.md`: lightweight commit message rules
+- `docs/repository-workflow.md`: large and multi-package repository workflow
+- `docs/control-style.md`: robot controller and timing-sensitive loop rules
 - `docs/python-docstring-style.md`: Korean comments and Python docstrings
 - `docs/urdf-xacro-style.md`: URDF, Xacro, SDF, frames, and XML style
 - `docs/safety.md`: robot and hardware safety changes
