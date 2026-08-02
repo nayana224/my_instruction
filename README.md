@@ -5,43 +5,23 @@ Codex와 GPT가 작은 범위에서 읽기 쉽고 안전한 코드를 작성하�
 이 저장소는 모든 규칙을 매 작업마다 강제로 적용하는 체크리스트가 아닙니다.
 `AGENTS.md`는 항상 따르고, `docs/`에서는 현재 작업과 직접 관련된 문서와 절만 확인합니다.
 
-## 권장 설치 방법
+## 가장 쉬운 설치 방법
 
-이 저장소는 홈 디렉터리 아래에 한 번만 clone해 두고, 새 workspace 또는 프로젝트를 만들 때 `install.sh`를 실행하는 방식을 권장합니다.
-
-### 1. 최초 한 번만 clone
-
-```bash
-mkdir -p ~/.local/share
-
-git clone \
-  https://github.com/nayana224/my_instruction.git \
-  ~/.local/share/my_instruction
-```
-
-이미 clone했다면 최신 내용만 갱신합니다.
-
-```bash
-git -C ~/.local/share/my_instruction pull --ff-only
-```
-
-### 2. 새 workspace에 적용
-
-workspace 루트를 지정합니다.
-
-```bash
-bash ~/.local/share/my_instruction/install.sh \
-  ~/inpyo_ws/new_robot_ws
-```
-
-현재 디렉터리에 적용할 때는 다음처럼 실행합니다.
+새 workspace를 만든 뒤 그 폴더로 이동합니다.
 
 ```bash
 cd ~/inpyo_ws/new_robot_ws
-bash ~/.local/share/my_instruction/install.sh .
 ```
 
-설치 결과는 다음과 같습니다.
+그다음 아래 명령어 한 줄만 실행합니다.
+
+```bash
+curl -fsSL \
+  https://raw.githubusercontent.com/nayana224/my_instruction/main/bootstrap.sh \
+  | bash
+```
+
+설치가 끝나면 현재 workspace에 다음 파일이 생깁니다.
 
 ```text
 new_robot_ws/
@@ -55,27 +35,62 @@ new_robot_ws/
     └── safety.md
 ```
 
-기존 `AGENTS.md` 또는 `docs/`가 있으면 installer는 덮어쓰지 않고 중단합니다. 내용을 확인한 뒤 이 지침으로 교체하려는 경우에만 `--force`를 사용합니다.
+이제 Codex나 GPT에게 다음처럼 요청하면 됩니다.
 
-```bash
-bash ~/.local/share/my_instruction/install.sh \
-  ~/inpyo_ws/new_robot_ws \
-  --force
+```text
+이 workspace의 AGENTS.md를 먼저 따라줘.
+현재 작업에 직접 관련된 docs 문서와 절만 확인해줘.
 ```
 
-`--force`는 대상 workspace의 기존 `AGENTS.md`와 `docs/`를 제거한 뒤 교체하므로, 프로젝트별 규칙을 작성해 두었다면 먼저 백업하거나 병합해야 합니다.
+### 기존 지침을 새 버전으로 교체
 
-### 한 번만 임시 clone해서 적용
-
-홈 디렉터리에 저장소를 유지하지 않으려면 다음처럼 사용할 수 있습니다.
+이미 `AGENTS.md` 또는 `docs/`가 있으면 기본 설치는 덮어쓰지 않고 중단합니다.
+기존 내용을 확인한 뒤 완전히 교체하려는 경우에만 다음 명령어를 사용합니다.
 
 ```bash
-tmp_dir="$(mktemp -d)"
-git clone --depth 1 \
+curl -fsSL \
+  https://raw.githubusercontent.com/nayana224/my_instruction/main/bootstrap.sh \
+  | bash -s -- . --force
+```
+
+`--force`는 현재 workspace의 기존 `AGENTS.md`와 `docs/`를 제거한 뒤 교체합니다.
+프로젝트별 규칙을 직접 작성해 두었다면 먼저 백업하거나 병합해야 합니다.
+
+## 명령어가 실제로 하는 일
+
+위 한 줄 명령어는 내부적으로만 다음 작업을 수행합니다.
+
+1. `my_instruction` 저장소를 임시 폴더에 clone합니다.
+2. `AGENTS.md`와 `docs/`를 현재 workspace에 복사합니다.
+3. 임시로 clone한 폴더를 자동으로 삭제합니다.
+
+따라서 workspace 안에 `my_instruction` 저장소나 별도의 `.git` 폴더가 남지 않습니다.
+
+## 저장소를 직접 보관하는 방법
+
+지침 내용을 자주 직접 수정하거나 확인하려는 경우에만 저장소를 홈 디렉터리에 clone해 둡니다.
+일반적인 사용에는 위의 한 줄 설치 방법이 더 쉽습니다.
+
+최초 한 번:
+
+```bash
+mkdir -p ~/.local/share
+
+git clone \
   https://github.com/nayana224/my_instruction.git \
-  "$tmp_dir/my_instruction"
-bash "$tmp_dir/my_instruction/install.sh" ~/inpyo_ws/new_robot_ws
-rm -rf "$tmp_dir"
+  ~/.local/share/my_instruction
+```
+
+최신 버전 받기:
+
+```bash
+git -C ~/.local/share/my_instruction pull --ff-only
+```
+
+새 workspace에 적용:
+
+```bash
+bash ~/.local/share/my_instruction/install.sh ~/inpyo_ws/new_robot_ws
 ```
 
 ## Codex와 GPT 사용 원칙
