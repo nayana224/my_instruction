@@ -22,7 +22,8 @@ When rules conflict, follow this order:
 - Do not mix formatting-only changes with behavior changes.
 - Preserve public ROS interfaces, file formats, frame names, package names, and
   installed paths unless all users are updated together.
-- Before editing, state the plan and likely files.
+- Before non-trivial or multi-file edits, state the plan and likely files. For a
+  trivial localized edit, proceed directly and report the result.
 - After editing, summarize changes, tests, behavior changes, and remaining risks.
 
 ## Simplicity
@@ -42,7 +43,8 @@ When rules conflict, follow this order:
 - Keep the main control flow understandable in one pass.
 - Avoid deep nesting, hidden side effects, clever expressions, and vague names.
 - Separate ROS or hardware I/O from pure policy, conversion, and validation when
-  that separation provides a clear testable boundary.
+  the logic is non-trivial, reused, safety-relevant, or clearly benefits from an
+  independent test boundary. Do not extract trivial pass-through helpers.
 - Validate untrusted data once at a clear boundary. Do not repeat the same check
   throughout internal helpers.
 - Type hints should clarify important interfaces, not annotate every local value.
@@ -62,7 +64,8 @@ When rules conflict, follow this order:
 ## Safety and environment
 
 - Keep command ownership, stop behavior, state transitions, and failure recovery
-  explicit.
+  explicit when the task involves stateful, asynchronous, motion, or hardware
+  behavior.
 - Follow `docs/safety.md` for motion, hardware, and safety-sensitive changes.
 - Do not commit credentials, tokens, private keys, passwords, or sensitive URLs.
 - Avoid hard-coded user paths, device serials, and network addresses when they
@@ -85,7 +88,8 @@ When rules conflict, follow this order:
 - Run the most relevant checks already available in the project environment.
 - Do not install tools, upgrade dependencies, or change the environment unless
   requested.
-- Test meaningful behavior, boundaries, state transitions, and failure paths.
+- Test meaningful behavior, boundaries, state transitions, and failure paths
+  that are relevant to the changed code.
 - Do not weaken assertions or tolerances only to make tests pass.
 - Use simulation, dry-run, or no-hardware validation before real hardware when
   practical.
@@ -96,6 +100,7 @@ When rules conflict, follow this order:
 When asked to review code:
 
 - Inspect before editing.
+- Apply only the checks relevant to the changed files and behavior.
 - Report actionable findings as Critical, Major, or Minor.
 - Include exact paths, lines, or symbols and explain the concrete risk.
 - Do not nitpick formatting already handled by tools.
