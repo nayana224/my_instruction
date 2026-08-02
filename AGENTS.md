@@ -95,6 +95,13 @@ When rules conflict, follow this order:
   practical.
 - Record checks that could not run and the remaining risk.
 
+## Git commits
+
+- When creating commits, use `<type>: <한글 요약>`.
+- Prefer the basic types `feat`, `fix`, `refactor`, `docs`, `test`, and `chore`.
+- Keep one logical change per commit and do not invent new types unnecessarily.
+- Use `docs/commit-style.md` only when a commit is requested or prepared.
+
 ## Review requests
 
 When asked to review code:
@@ -110,6 +117,7 @@ When asked to review code:
 
 - `docs/code-style.md`: language, ROS 2, YAML, launch, and build rules
 - `docs/code-review.md`: review checklist and output format
+- `docs/commit-style.md`: lightweight commit message rules
 - `docs/python-docstring-style.md`: Korean comments and Python docstrings
 - `docs/urdf-xacro-style.md`: URDF, Xacro, SDF, frames, and XML style
 - `docs/safety.md`: robot and hardware safety changes
